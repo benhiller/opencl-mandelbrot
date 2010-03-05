@@ -81,7 +81,7 @@ int runCL(int width, int height)
 #pragma mark Create Buffer
   {
 
-		image	= clCreateBuffer(context, CL_MEM_READ_WRITE, buffer_size, NULL, NULL);
+		image	= clCreateBuffer(context, CL_MEM_WRITE_ONLY, buffer_size, NULL, NULL);
   }
 
 #pragma mark Program and Kernel Creation
@@ -96,29 +96,6 @@ int runCL(int width, int height)
 		assert(err == CL_SUCCESS);
 
 		err = clBuildProgram(program[0], 0, NULL, NULL, NULL, NULL);
-    // Give information about why build failed, taken from Apple docs
-    if(err != CL_SUCCESS) {
-      size_t *length;
-
-      // declare a buffer to hold the build info
-      char buffer[2048];
-
-      printf("Error: Failed to build program executable!\n");
-
-      // get the details on the error, and store it in buffer
-      clGetProgramBuildInfo(program[0],              // the program object being queried
-                            device,            // the device for which the OpenCL code was built
-                            CL_PROGRAM_BUILD_LOG, // specifies that we want the build log
-                            sizeof(buffer),       // the size of the buffer
-                            buffer,               // on return, holds the build log
-                            length);                // on return, the actual size in bytes of the
-      //   data returned
-
-      // print out the build errors
-      printf("BUILD LOG\n %s\n", buffer);
-      exit(1);
-    }
-
 		assert(err == CL_SUCCESS);
 
 		// Now create the kernel "objects" that we want to use in the example file
@@ -137,20 +114,24 @@ int runCL(int width, int height)
 		// Run the calculation by enqueuing it and forcing the
 		// command queue to complete the task
 		size_t global_work_size[2] = {width, height};
-    printf("Running kernel\n");
 		err = clEnqueueNDRangeKernel(cmd_queue, kernel[0], 2, NULL,
                                  global_work_size, NULL, 0, NULL, NULL);
 		assert(err == CL_SUCCESS);
 		clFinish(cmd_queue);
 
-    printf("Reading buffer\n");
     err = clEnqueueReadBuffer(cmd_queue, image, CL_TRUE, 0, buffer_size, host_image, 0, NULL, NULL);
 		assert(err == CL_SUCCESS);
 	}
 
 #pragma mark File output
   {
-    printf("Writing bmp\n");
+    /* for(int i = 0; i < width; i++) {
+      for(int j = 0; j < height; j++) {
+        if(host_image[width*j + i*3] != 0) printf("X");
+        else printf("0");
+      }
+      printf("\n");
+    } */
     write_bmp("output.bmp", width, height, host_image);
   }
 
@@ -166,9 +147,6 @@ int runCL(int width, int height)
 }
 
 int main(int argc, const char * argv[]) {
-  int x = 512;
-  int y = 512;
-
-  runCL(x, y);
+  runCL(1024, 1024);
   return 0;
 }

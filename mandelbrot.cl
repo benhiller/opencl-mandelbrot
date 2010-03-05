@@ -1,5 +1,13 @@
 int index(int x, int y, int width) {
-  return width*y + x*3;
+  return 3*width*y + x*3;
+}
+
+float mapX(float x) {
+  return x*3.25 - 2;
+}
+
+float mapY(float y) {
+  return y*2.5 - 1.25;
 }
 
 __kernel void render(__global char *out) {
@@ -9,8 +17,8 @@ __kernel void render(__global char *out) {
   size_t global_size_y = get_global_size(1);
   int idx = index(x_dim, y_dim, global_size_x);
 
-  float x_origin = (float) x_dim / global_size_x;
-  float y_origin = (float) y_dim / global_size_y;
+  float x_origin = mapX((float) x_dim / global_size_x);
+  float y_origin = mapY((float) y_dim / global_size_y);
 
   float x = 0.0;
   float y = 0.0;
