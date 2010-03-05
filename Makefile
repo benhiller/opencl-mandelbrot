@@ -3,10 +3,10 @@ OPENCL = -framework OpenCL
 
 all: mandelbrot
 
-mandelbrot: main.c bmp
+mandelbrot: main.c bmp.o
 	$(C) $(OPENCL) -o mandelbrot main.c bmp.o
 
-bmp: bmp.c bmp.h
+bmp.o: bmp.c bmp.h
 	$(C) -c bmp.c
 
 clean:

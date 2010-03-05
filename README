@@ -1,0 +1,4 @@
+A very simple program to generate images of the Mandelbrot set via OpenCL.
+
+TODO:
+  Use all avaiable devices on host
