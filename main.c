@@ -26,7 +26,7 @@ char* load_program_source(const char *filename) {
 	return source;
 }
 
-int runCL(int x, int y)
+int runCL(int width, int height)
 {
 	cl_program program[1];
 	cl_kernel kernel[2];
@@ -38,11 +38,11 @@ int runCL(int x, int y)
 
 	cl_int err = 0;
 	size_t returned_size = 0;
-  size_t buffer_size;
+  size_t buffer_size = sizeof(char) * width * height * 3;
 
 	cl_mem image;
 
-  cl_char4 host_image[512][512];// = (char *)malloc(x*y*sizeof(cl_char4));
+  char *host_image = (char *) malloc(buffer_size);
 
 #pragma mark Device Information
 	{
@@ -80,9 +80,8 @@ int runCL(int x, int y)
 
 #pragma mark Create Buffer
   {
-    buffer_size = sizeof(cl_char4) * x * y;
 
-		image	= clCreateBuffer(context, CL_MEM_WRITE_ONLY, buffer_size, NULL, NULL);
+		image	= clCreateBuffer(context, CL_MEM_READ_WRITE, buffer_size, NULL, NULL);
   }
 
 #pragma mark Program and Kernel Creation
@@ -137,7 +136,7 @@ int runCL(int x, int y)
 	{
 		// Run the calculation by enqueuing it and forcing the
 		// command queue to complete the task
-		size_t global_work_size[2] = {x, y};
+		size_t global_work_size[2] = {width, height};
     printf("Running kernel\n");
 		err = clEnqueueNDRangeKernel(cmd_queue, kernel[0], 2, NULL,
                                  global_work_size, NULL, 0, NULL, NULL);
@@ -147,20 +146,12 @@ int runCL(int x, int y)
     printf("Reading buffer\n");
     err = clEnqueueReadBuffer(cmd_queue, image, CL_TRUE, 0, buffer_size, host_image, 0, NULL, NULL);
 		assert(err == CL_SUCCESS);
-		clFinish(cmd_queue);
 	}
-
-  for(int i = 0; i < x; i++) {
-    for(int j = 0; j < y; j++) {
-      printf("%d\n", host_image[i][j]);
-    }
-  }
-
 
 #pragma mark File output
   {
     printf("Writing bmp\n");
-    write_bmp("output.bmp", x, y, (char *)host_image);
+    write_bmp("output.bmp", width, height, host_image);
   }
 
 
