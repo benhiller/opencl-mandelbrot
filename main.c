@@ -1,7 +1,6 @@
 // Note: Most of the code comes from the MacResearch OpenCL podcast
 
 #include <stdio.h>
-#include <assert.h>
 #include <stdlib.h>
 
 #include <OpenCL/OpenCL.h>
@@ -30,22 +29,23 @@ int runCL(int width, int height)
   char *host_image = (char *) malloc(buffer_size);
 
 	context = create_context(&num_devices);
+  printf("Created context\n");
   print_debug_info(context);
 
   err = clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(cl_device_id) * 16,
                          &devices, NULL);
-	assert(err == CL_SUCCESS);
+	check_succeeded(err);
 
   int i;
   for(i = 0; i < num_devices; i++) {
     cmd_queue[i] = clCreateCommandQueue(context, devices[i], 0, &err);
-    assert(err == CL_SUCCESS);
+    check_succeeded(err);
   }
 
   // Mark this write only, since the kernel does not have to read the image it
   // is writing. I am not sure if this has any performance benefit.
 	image	= clCreateBuffer(context, CL_MEM_WRITE_ONLY, buffer_size, NULL, &err);
-  assert(err == CL_SUCCESS);
+  check_succeeded(err);
 
 	// Load the program source from disk
 	const char *filename = "mandelbrot.cl";
@@ -54,7 +54,7 @@ int runCL(int width, int height)
   // Now setup the arguments to our kernel
   // In our case, we just need to give it a pointer to the image
   err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &image);
-  assert(err == CL_SUCCESS);
+  check_succeeded(err);
 
   // Run the calculation by enqueuing it and forcing the
   // command queue to complete the task
@@ -68,13 +68,13 @@ int runCL(int width, int height)
     size_t offset = device_work_offset[1]*3*width;
     err = clEnqueueNDRangeKernel(cmd_queue[i], kernel, 2, device_work_offset,
                                  device_work_size, NULL, 0, NULL, NULL);
-    assert(err == CL_SUCCESS);
+    check_succeeded(err);
 
     // Non-blocking read, so we can continue queuing up more kernels
     err = clEnqueueReadBuffer(cmd_queue[i], image, CL_FALSE, offset,
                               buffer_size/num_devices,
                               host_image, 0, NULL, NULL);
-    assert(err == CL_SUCCESS);
+    check_succeeded(err);
   }
   for(i = 0; i < num_devices; i++) {
     clFinish(cmd_queue[i]);
