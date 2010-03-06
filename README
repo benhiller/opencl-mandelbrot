@@ -1,4 +1,2 @@
 A very simple program to generate images of the Mandelbrot set via OpenCL.
-
-TODO:
-  Use all avaiable devices on host
+Should use all avaiable CPUs or GPUs (either CPUs OR GPUs, not a mix of both), but this is untested
