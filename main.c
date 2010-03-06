@@ -29,7 +29,10 @@ int runCL(int width, int height)
   char *host_image = (char *) malloc(buffer_size);
 
 	context = create_context(&num_devices);
-  printf("Created context\n");
+  if(num_devices == 0) {
+    printf("No compute devices found\n");
+    return -1;
+  }
   print_debug_info(context);
 
   err = clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(cl_device_id) * 16,
@@ -60,7 +63,7 @@ int runCL(int width, int height)
   // command queue to complete the task
   // To support multiple compute devices, need to split this up
   // among all of them. Easiest way to split up is block alloc.
-  size_t global_work_size[2] = {width, height};
+  //
   // Assuming that num_devices divides width and height evenly
   size_t device_work_size[2] = {width, height/num_devices};
   for(i = 0; i < num_devices; i++) {

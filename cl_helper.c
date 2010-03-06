@@ -44,8 +44,8 @@ cl_kernel load_kernel_from_file(cl_context context, const char *filename) {
 
 cl_context create_context(cl_uint* num_devices) {
   cl_int err;
-  cl_device_id **devices, cpus[16];
-  *devices = malloc(16 * sizeof(cl_device_id));
+  cl_device_id *devices, cpus[16];
+  devices = malloc(16 * sizeof(cl_device_id));
   cl_uint num_cpus;
   cl_context context;
 
@@ -55,14 +55,14 @@ cl_context create_context(cl_uint* num_devices) {
 
   // Find the GPU CL device, this is what we really want
 	// If there is no GPU device is CL capable, fall back to CPU
-	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 16, *devices, num_devices);
+	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 16, devices, num_devices);
 	if (err != CL_SUCCESS || *num_devices == 0) {
-    *devices = cpus;
+    devices = cpus;
     *num_devices = num_cpus;
   }
 	assert(*devices);
 
-  context = clCreateContext(0, *num_devices, *devices, NULL, NULL, &err);
+  context = clCreateContext(0, *num_devices, devices, NULL, NULL, &err);
   check_succeeded(err);
 
   return context;
