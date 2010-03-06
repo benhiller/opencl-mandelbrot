@@ -17,8 +17,8 @@ int runCL(int width, int height)
 	cl_context       context;
 
 	cl_int err = 0;
-  int devices = 0;
-  cl_device_id device;
+  cl_uint devices = 0;
+  cl_device_id device[16];
 
 	size_t returned_size = 0;
 
@@ -32,10 +32,11 @@ int runCL(int width, int height)
 	context = create_context(&devices);
   print_debug_info(context);
 
-  err = clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(cl_device_id), &device, NULL);
+  err = clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(cl_device_id) * 16,
+                         &device, NULL);
 	assert(err == CL_SUCCESS);
 
-	cmd_queue = clCreateCommandQueue(context, device, 0, NULL);
+	cmd_queue = clCreateCommandQueue(context, device[0], 0, NULL);
 
   // Mark this write only, since the kernel does not have to read the image it
   // is writing. I am not sure if this has any performance benefit.
@@ -54,12 +55,8 @@ int runCL(int width, int height)
   // command queue to complete the task
   size_t global_work_size[2] = {width, height};
   err = clEnqueueNDRangeKernel(cmd_queue, kernel, 2, NULL,
-                             global_work_size, NULL, 0, NULL, NULL);
+                               global_work_size, NULL, 0, NULL, NULL);
   assert(err == CL_SUCCESS);
-
-  // Wait for the kernel to finish before reading the buffer
-  // I am not sure this is necessary, since it is a queue, should double check
-  clFinish(cmd_queue);
 
   err = clEnqueueReadBuffer(cmd_queue, image, CL_TRUE, 0, buffer_size,
                             host_image, 0, NULL, NULL);
