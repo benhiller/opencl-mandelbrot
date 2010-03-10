@@ -1,5 +1,5 @@
 C = gcc
-CFLAGS = -g
+CFLAGS =
 OPENCL = -framework OpenCL
 
 all: mandelbrot
