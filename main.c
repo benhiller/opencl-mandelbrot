@@ -37,18 +37,18 @@ int runCL(int width, int height)
 
   err = clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(cl_device_id) * 16,
                          &devices, NULL);
-	check_succeeded(err);
+	check_succeeded("Getting context info", err);
 
   int i;
   for(i = 0; i < num_devices; i++) {
     cmd_queue[i] = clCreateCommandQueue(context, devices[i], 0, &err);
-    check_succeeded(err);
+    check_succeeded("Creating command queue", err);
   }
 
   // Mark this write only, since the kernel does not have to read the image it
   // is writing. I am not sure if this has any performance benefit.
 	image	= clCreateBuffer(context, CL_MEM_WRITE_ONLY, buffer_size, NULL, &err);
-  check_succeeded(err);
+  check_succeeded("Creating buffer", err);
 
 	// Load the program source from disk
 	const char *filename = "mandelbrot.cl";
@@ -57,7 +57,7 @@ int runCL(int width, int height)
   // Now setup the arguments to our kernel
   // In our case, we just need to give it a pointer to the image
   err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &image);
-  check_succeeded(err);
+  check_succeeded("Setting kernel arg", err);
 
   // Run the calculation by enqueuing it and forcing the
   // command queue to complete the task
@@ -71,13 +71,13 @@ int runCL(int width, int height)
     size_t offset = device_work_offset[1]*3*width;
     err = clEnqueueNDRangeKernel(cmd_queue[i], kernel, 2, device_work_offset,
                                  device_work_size, NULL, 0, NULL, NULL);
-    check_succeeded(err);
+    check_succeeded("Running kernel", err);
 
     // Non-blocking read, so we can continue queuing up more kernels
     err = clEnqueueReadBuffer(cmd_queue[i], image, CL_FALSE, offset,
                               buffer_size/num_devices,
                               host_image, 0, NULL, NULL);
-    check_succeeded(err);
+    check_succeeded("Reading buffer", err);
   }
   for(i = 0; i < num_devices; i++) {
     clFinish(cmd_queue[i]);
